@@ -1,0 +1,187 @@
+parameters:
+    # Defaults
+    app.defaults.collection_page_size: 20
+    app.defaults.character.health: 100
+    app.defaults.character.strength: 100
+    app.defaults.character.observable_radius: 2
+    app.defaults.character.ability.fighting_bonus: !php/const:AppBundle\Character\Ability\FightingBonusInterface::ABILITY
+    app.defaults.character.ability.healing_bonus: !php/const:AppBundle\Character\Ability\HealingBonusInterface::ABILITY
+    app.defaults.world.size_x: 10
+    app.defaults.world.size_y: 10
+    app.defaults.enemy_count: 20
+
+    # Serializer handlers
+    app.serializer.handler.uuid.class: AppBundle\Serializer\Handler\UuidHandler
+    app.serializer.handler.entity.class: AppBundle\Serializer\Handler\EntityHandler
+
+    # Command and command handlers
+    app.command.create_character.class: AppBundle\Character\Command\CreateCharacterCommand
+    app.command_handler.create_character.class: AppBundle\Character\Command\CreateCharacterCommandHandler
+    app.command.create_turn.class: AppBundle\Turn\Command\CreateTurnCommand
+    app.command_handler.create_turn.class: AppBundle\Turn\Command\CreateTurnCommandHandler
+    app.command_handler.persist_entity.class: AppBundle\CommandBus\PersistEntityCommandHandler
+
+    # Entities
+    app.entity.character.class: AppBundle\Entity\Character
+    app.entity.tile.class: AppBundle\Entity\Tile
+    app.entity.world.class: AppBundle\Entity\World
+    app.entity.turn.class: AppBundle\Entity\Turn
+
+    # Character services
+    app.service.character.registry.class: AppBundle\Character\Registry\CharacterRegistry
+    app.service.character.factory.class: AppBundle\Character\Factory\CharacterFactory
+    app.service.character.prototype.class: AppBundle\Character\Prototype\CharacterPrototype
+    app.service.character.observable_tiles_strategy.class: AppBundle\Repository\Strategy\DefaultObservableTileStrategy
+
+    # World services
+    app.service.world.factory.class: AppBundle\World\Factory\WorldFactory
+    app.service.world.character_seed_strategy.class: AppBundle\World\SeedCharacter\SeedCharacterRandomlyStrategy
+    app.event_listener.world.create_world_for_character.class: AppBundle\World\EventListener\CreateWorldForCharacterListener
+    app.event_listener.world.populate_world.class: AppBundle\World\EventListener\PopulateWorldListener
+
+    # Turn services
+    app.service.turn.factory.class: AppBundle\Turn\Factory\TurnFactory
+
+    # Fighting services
+    app.service.fight.result_strategy.class: AppBundle\Fight\Strategy\FightingBonusResultStrategy
+    app.service.fight.experience_strategy.class: AppBundle\Fight\Strategy\HealthBasedExperienceStrategy
+    app.service.fight.fight_event_listener.class: AppBundle\Fight\EventListener\FightEventListener
+    app.service.fight.experience_event_listener.class: AppBundle\Fight\EventListener\CharacterExperienceEventListener
+    app.service.fight.health_event_listener.class: AppBundle\Fight\EventListener\CharacterHealthEventListener
+
+    # Misc services and helpers
+    app.helper.paginator.class: AppBundle\Service\Pagination\PaginatorHelper
+
+services:
+    # Serializer handler
+    app.serializer.handler.uuid:
+        class: "%app.serializer.handler.uuid.class%"
+        tags:
+          - {name: 'jms_serializer.subscribing_handler'}
+
+    app.serializer.handler.entity:
+        class: "%app.serializer.handler.entity.class%"
+        arguments: ["@doctrine"]
+        tags:
+          - {name: 'jms_serializer.subscribing_handler'}
+
+    # Command handlers
+    app.command_handler.create_character:
+        class: "%app.command_handler.create_character.class%"
+        arguments: ["@tactician.commandbus", "@app.service.character.factory", "@event_dispatcher"]
+        tags:
+          - {name: "tactician.handler", command: "%app.command.create_character.class%"}
+
+    app.command_handler.create_turn:
+        class: "%app.command_handler.create_turn.class%"
+        arguments: ["@tactician.commandbus", "@app.service.turn.factory", "@event_dispatcher"]
+        tags:
+          - {name: "tactician.handler", command: "%app.command.create_turn.class%"}
+
+    app.command_handler.persist_entity:
+        class: "%app.command_handler.persist_entity.class%"
+        arguments: ["@doctrine.orm.entity_manager"]
+        tags:
+            - {name: "tactician.handler", command: "%app.entity.character.class%"}
+            - {name: "tactician.handler", command: "%app.entity.turn.class%"}
+
+
+    # Character services
+    app.service.character.prototype.warrior:
+        class: "%app.service.character.prototype.class%"
+        arguments: ["%app.entity.character.class%", "%app.defaults.character.health%", "%app.defaults.character.strength%"]
+        calls:
+            - ["setAbility", ["%app.defaults.character.ability.fighting_bonus%", 0.2]]
+        tags:
+            - {name: app.character_prototype, alias: warrior}
+
+    app.service.character.prototype.giant:
+        class: "%app.service.character.prototype.class%"
+        arguments: ["%app.entity.character.class%", 1000, 1000]
+        calls:
+            - ["setAbility", ["%app.defaults.character.ability.fighting_bonus%", -0.2]]
+        tags:
+            - {name: app.character_prototype, alias: giant}
+
+    app.service.character.registry:
+        class: "%app.service.character.registry.class%"
+
+    app.service.character.factory:
+        class: "%app.service.character.factory.class%"
+        arguments: ["@app.service.character.registry"]
+
+    app.service.character.observable_tiles_strategy:
+        class: "%app.service.character.observable_tiles_strategy.class%"
+        arguments: ["@app.repository.tile", "%app.defaults.character.observable_radius%"]
+
+    # World services
+    app.service.world.factory:
+        class: "%app.service.world.factory.class%"
+        arguments: ["%app.entity.world.class%", "%app.defaults.world.size_x%", "%app.defaults.world.size_y%"]
+
+    app.service.world.character_seed_strategy:
+        class: "%app.service.world.character_seed_strategy.class%"
+        arguments: ["@app.repository.tile"]
+
+    app.event_listener.world.create_world_for_character:
+        class: "%app.event_listener.world.create_world_for_character.class%"
+        arguments: ["@app.service.world.factory", "@app.repository.world", "@app.service.world.character_seed_strategy", "@event_dispatcher"]
+        tags:
+            - { name: kernel.event_listener, event: !php/const:AppBundle\Character\Event\CharacterEvent::ON_CREATED, method: onCreated }
+
+    app.event_listener.world.populate_world:
+        class: "%app.event_listener.world.populate_world.class%"
+        arguments: ["@app.service.character.registry", "@app.service.character.factory", "@app.repository.world", "@app.repository.character", "@app.service.world.character_seed_strategy", "%app.defaults.enemy_count%"]
+        tags:
+            - { name: kernel.event_listener, event: !php/const:AppBundle\World\Event\WorldEvent::ON_CREATED, method: onCreated }
+
+    # Turn services
+    app.service.turn.factory:
+        class: "%app.service.turn.factory.class%"
+        arguments: ["%app.entity.turn.class%"]
+
+    # Fighting services
+    app.service.fight.result_strategy:
+        class: "%app.service.fight.result_strategy.class%"
+
+    app.service.fight.experience_strategy:
+        class: "%app.service.fight.experience_strategy.class%"
+
+    app.service.fight.fight_event_listener:
+        class: "%app.service.fight.fight_event_listener.class%"
+        arguments: ["@app.repository.character", "@app.service.fight.result_strategy", "@event_dispatcher"]
+        tags:
+            - { name: kernel.event_listener, event: !php/const:AppBundle\Turn\Event\TurnEvent::AFTER_CREATED, method: onTurnCreated }
+
+    app.service.fight.experience_event_listener:
+        class: "%app.service.fight.experience_event_listener.class%"
+        arguments: ["@app.service.fight.experience_strategy", "@app.repository.character"]
+        tags:
+            - { name: kernel.event_listener, event: !php/const:AppBundle\Fight\Event\FightResultEvent::ON_FIGHT, method: onFight, priority: 2 }
+
+    app.service.fight.health_event_listener:
+        class: "%app.service.fight.health_event_listener.class%"
+        arguments: ["@app.repository.character"]
+        tags:
+            - { name: kernel.event_listener, event: !php/const:AppBundle\Fight\Event\FightResultEvent::ON_FIGHT, method: onFight, priority: 1 }
+
+    # Repositories
+    app.repository.character:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments: ["%app.entity.character.class%"]
+
+    app.repository.tile:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments: ["%app.entity.tile.class%"]
+
+    app.repository.world:
+        class: Doctrine\ORM\EntityRepository
+        factory: ['@doctrine.orm.default_entity_manager', getRepository]
+        arguments: ["%app.entity.world.class%"]
+
+    # Misc services and helpers
+    app.helper.paginator:
+        class: "%app.helper.paginator.class%"
+

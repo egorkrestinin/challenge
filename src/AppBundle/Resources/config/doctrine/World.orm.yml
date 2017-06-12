@@ -1,0 +1,20 @@
+AppBundle\Entity\World:
+    type: entity
+    table: worlds
+    repositoryClass: AppBundle\Repository\WorldRepository
+    id:
+        id:
+            type: uuid
+            generator: { strategy: NONE }
+    fields:
+        worldSizeX:
+            type: integer
+            nullable: false
+        worldSizeY:
+            type: integer
+            nullable: false
+    oneToMany:
+        tiles:
+            targetEntity: AppBundle\Entity\Tile
+            mappedBy: world
+            cascade: ["persist"]

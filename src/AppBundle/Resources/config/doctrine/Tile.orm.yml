@@ -1,0 +1,28 @@
+AppBundle\Entity\Tile:
+    type: entity
+    table: world_tiles
+    repositoryClass: AppBundle\Repository\TileRepository
+    id:
+        id:
+            type: uuid
+            generator: { strategy: NONE }
+    fields:
+        x:
+            type: integer
+            nullable: false
+        y:
+            type: integer
+            nullable: false
+    manyToOne:
+        world:
+            targetEntity: AppBundle\Entity\World
+            inversedBy: tiles
+            joinColumn:
+                name: world_id
+                referencedColumnName: id
+                nullable: false
+                onDelete: CASCADE
+    oneToMany:
+        characters:
+            targetEntity: AppBundle\Entity\Character
+            mappedBy: tile

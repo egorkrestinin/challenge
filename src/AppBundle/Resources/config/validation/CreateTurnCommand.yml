@@ -1,0 +1,8 @@
+AppBundle\Turn\Command\CreateTurnCommand:
+    properties:
+        id:
+            - NotBlank: ~
+            - Type: Ramsey\Uuid\UuidInterface
+        tile:
+            - NotBlank: ~
+            - Type: AppBundle\World\TileInterface

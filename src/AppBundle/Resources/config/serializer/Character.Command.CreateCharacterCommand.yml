@@ -1,0 +1,9 @@
+AppBundle\Character\Command\CreateCharacterCommand:
+    exclusion_policy: ALL
+    properties:
+        id:
+            expose: true
+            type: Uuid
+        prototype:
+            expose: true
+            type: string

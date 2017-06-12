@@ -1,0 +1,18 @@
+imports:
+    - { resource: "@AppBundle/Resources/config/services.yml" }
+
+parameters:
+    app.command_bus.middleware.validator.class: AppBundle\CommandBus\Middleware\ValidatorMiddleware
+    app.command_bus.event_listener.bad_request.class: AppBundle\CommandBus\Middleware\EventListener\InvalidCommandExceptionListener
+
+services:
+    app.command_bus.middleware.validator:
+        class: "%app.command_bus.middleware.validator.class%"
+        arguments: ["@validator"]
+
+    # Exception listeners
+    app.command_bus.event_listener.bad_request:
+        class: "%app.command_bus.event_listener.bad_request.class%"
+        arguments: ["@jms_serializer"]
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }

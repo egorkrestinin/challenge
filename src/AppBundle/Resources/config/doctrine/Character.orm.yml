@@ -1,0 +1,32 @@
+AppBundle\Entity\Character:
+    type: entity
+    table: characters
+    repositoryClass: AppBundle\Repository\CharacterRepository
+    id:
+        id:
+            type: uuid
+            generator: { strategy: NONE }
+    fields:
+        health:
+            type: integer
+            nullable: false
+        strength:
+            type: integer
+            nullable: false
+        abilities:
+            type: array
+        type:
+            type: integer
+            nullable: false
+        experience:
+            type: integer
+            nullable: false
+    manyToOne:
+        tile:
+            targetEntity: AppBundle\Entity\Tile
+            inversedBy: characters
+            joinColumn:
+                name: tile_id
+                referencedColumnName: id
+                nullable: false
+                onDelete: CASCADE

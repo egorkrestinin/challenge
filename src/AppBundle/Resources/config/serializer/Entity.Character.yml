@@ -1,0 +1,22 @@
+AppBundle\Entity\Character:
+    exclusion_policy: ALL
+    properties:
+        id:
+            expose: true
+            type: string
+            readonly: true
+        health:
+            expose: true
+            type: string
+        strength:
+            expose: true
+            type: integer
+        experience:
+            expose: true
+            type: string
+        type:
+            expose: true
+            type: integer
+        abilities:
+            expose: true
+            type: array

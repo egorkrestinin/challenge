@@ -1,0 +1,12 @@
+AppBundle\Entity\Character:
+    constraints:
+        - Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity: id
+    properties:
+        strength:
+            - NotBlank: ~
+            - Type: integer
+            - GreaterThan: 0
+        health:
+            - NotBlank: ~
+            - Type: integer
+            - GreaterThan: 0

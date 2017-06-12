@@ -1,0 +1,122 @@
+imports:
+    - { resource: parameters.yml }
+    - { resource: security.yml }
+    - { resource: services.yml }
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# http://symfony.com/doc/current/best_practices/configuration.html#application-related-configuration
+parameters:
+    locale: en
+    jms_serializer.camel_case_naming_strategy.class: JMS\Serializer\Naming\IdenticalPropertyNamingStrategy
+
+framework:
+    #esi:             ~
+    #translator:      { fallbacks: ["%locale%"] }
+    secret:          "%secret%"
+    router:
+        resource: "%kernel.root_dir%/config/routing.yml"
+        strict_requirements: ~
+    form:            ~
+    csrf_protection: false
+    validation:      { enable_annotations: false }
+    serializer:      { enable_annotations: false }
+    templating:
+        engines: ['twig']
+    default_locale:  "%locale%"
+    trusted_hosts:   ~
+    trusted_proxies: ~
+    session:
+        handler_id:  session.handler.native_file
+        save_path:   "%kernel.root_dir%/../var/sessions/%kernel.environment%"
+    fragments:       ~
+    http_method_override: true
+    assets: ~
+
+# Twig Configuration
+twig:
+    debug:            "%kernel.debug%"
+    strict_variables: "%kernel.debug%"
+
+# Doctrine Configuration
+doctrine:
+    dbal:
+        driver: pdo_mysql
+        host: '%database_host%'
+        port: '%database_port%'
+        dbname: '%database_name%'
+        user: '%database_user%'
+        password: '%database_password%'
+        charset: UTF8
+        types:
+            uuid:  Ramsey\Uuid\Doctrine\UuidType
+    orm:
+        auto_generate_proxy_classes: "%kernel.debug%"
+        naming_strategy: doctrine.orm.naming_strategy.underscore
+        auto_mapping: true
+        dql:
+            numeric_functions:
+                rand: AppBundle\Doctrine\DQLFunction\Rand
+
+fos_rest:
+    body_converter:
+        enabled: true
+    routing_loader:
+        default_format: json
+        include_format: false
+    view:
+        view_response_listener: force
+    serializer:
+        serialize_null: true
+    exception:
+        enabled: true
+
+jms_serializer:
+    metadata:
+        auto_detection: true
+        directories:
+            AppBundle:
+                namespace_prefix: "AppBundle"
+                path: "@AppBundle/Resources/config/serializer"
+
+nelmio_api_doc:
+    swagger:
+        api_base_path:        /
+        swagger_version:      '1.2'
+        api_version:          '0.1'
+        info:
+            title:                EndpointTraderAwareInterface API
+            description:          'Custom API'
+            TermsOfServiceUrl:    null
+            contact:              null
+            license:              null
+            licenseUrl:           null
+    sandbox:
+        authentication:
+            delivery: http
+            type:     bearer
+        request_format:
+            method: accept_header
+        body_format:
+            formats: [json]
+            default_format: json
+
+nelmio_cors:
+    paths:
+        '^/':
+            allow_origin: ['*']
+            expose_headers: ['Location']
+            allow_headers: ['Content-Type','Authorization', 'Accept']
+            allow_methods: ['POST', 'PATCH', 'GET', 'DELETE', 'OPTIONS']
+            max_age: 3600
+
+
+tactician:
+    commandbus:
+        default:
+            middleware:
+                - app.command_bus.middleware.validator
+                - tactician.middleware.command_handler
+        queued:
+            middleware:
+                - tactician.middleware.validator
+                - tactician.middleware.command_handler

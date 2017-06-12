@@ -1,0 +1,10 @@
+AppBundle\Entity\Turn:
+    constraints:
+        - Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity: id
+    properties:
+        character:
+            - NotBlank: ~
+            - Type: AppBundle\Character\CharacterInterface
+        tile:
+            - NotBlank: ~
+            - Type: AppBundle\World\TileInterface

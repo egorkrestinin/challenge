@@ -1,0 +1,11 @@
+character:
+    type:     rest
+    resource: AppBundle\Controller\CharacterController
+
+turn:
+    type:     rest
+    resource: AppBundle\Controller\TurnController
+
+world:
+    type:     rest
+    resource: AppBundle\Controller\WorldController

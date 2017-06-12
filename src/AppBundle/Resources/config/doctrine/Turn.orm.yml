@@ -1,0 +1,22 @@
+AppBundle\Entity\Turn:
+    type: entity
+    table: turns
+    id:
+        id:
+            type: uuid
+            generator: { strategy: NONE }
+    manyToOne:
+        character:
+            targetEntity: AppBundle\Entity\Character
+            joinColumn:
+                name: character_id
+                referencedColumnName: id
+                nullable: false
+                onDelete: CASCADE
+        tile:
+            targetEntity: AppBundle\Entity\Tile
+            joinColumn:
+                name: tile_id
+                referencedColumnName: id
+                nullable: false
+                onDelete: CASCADE

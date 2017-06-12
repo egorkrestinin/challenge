@@ -1,0 +1,9 @@
+AppBundle\Turn\Command\CreateTurnCommand:
+    exclusion_policy: ALL
+    properties:
+        id:
+            expose: true
+            type: Uuid
+        tile:
+            expose: true
+            type: Entity<AppBundle\Entity\Tile>

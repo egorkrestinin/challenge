@@ -1,0 +1,18 @@
+AppBundle\Entity\Tile:
+    exclusion_policy: ALL
+    properties:
+        id:
+            expose: true
+            type: string
+        x:
+            expose: true
+            type: integer
+        y:
+            expose: true
+            type: integer
+    relations:
+        -
+          rel: characters
+          embedded:
+            content: expr(object.getCharacters())
+

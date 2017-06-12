@@ -1,0 +1,10 @@
+AppBundle\Character\Command\CreateCharacterCommand:
+    properties:
+        id:
+            - NotBlank: ~
+            - Type: Ramsey\Uuid\UuidInterface
+        prototype:
+            - NotBlank: ~
+            - Type: string
+            - Length:
+                max: 255
